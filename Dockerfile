@@ -1,18 +1,26 @@
-FROM fedora:32
+FROM centos:8
 
 RUN mkdir /disks && \
-    (cd /etc/yum.repos.d/ && \ 
-	mkdir keep && mv fedora.repo fedora-updates.repo keep && \
-	rm *.repo && mv keep/fedora.repo keep/fedora-updates.repo . && rmdir keep && \
-        curl -LO https://fedorapeople.org/groups/virt/virtio-win/virtio-win.repo) && \
-    dnf -y update && \
-    dnf -y install \
+    yum -y update && \
+    rm -rf /var/cache/yum && \
+    yum install -y \
+        qemu-img \
         qemu-kvm \
         virt-v2v \
-	virtio-win
+        virtio-win && \
+    yum clean all
+
+# Get Linux packages of qemu guest agent
+COPY grab_qemu_ga.sh /usr/bin/grab_qemu_ga.sh
+RUN chmod +x /usr/bin/grab_qemu_ga.sh && \
+    /usr/bin/grab_qemu_ga.sh && \
+    rm -fv /usr/bin/grab_qemu_ga.sh
 
 ENV LIBGUESTFS_BACKEND=direct
 
-ADD entrypoint.sh /entrypoint.sh
+# Add entrypoint and set exec bit
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-ENTRYPOINT ["/entrypoint.sh"]
+USER ${USER_UID}
