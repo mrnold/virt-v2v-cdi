@@ -16,6 +16,7 @@ RUN /tmp/grab_qemu_ga && \
     rm -fv /tmp/grab_qemu_ga
 
 ENV LIBGUESTFS_BACKEND=direct
+ENV VIRTIO_WIN=/usr/share/virtio-win
 
 COPY bin/entrypoint /usr/bin/entrypoint
 
